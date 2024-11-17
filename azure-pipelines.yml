@@ -16,14 +16,26 @@ stages:
   displayName: Build image
   jobs:
   - job: Build
-    displayName: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
+    displayName: Build and push Docker image
+    steps: 
+    - task: Docker@1      
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: 'dockerhub-halin'
+        command: 'Build an image'
+        dockerFile: '**/CustomerApi/CustomerApi/Dockerfile'
+        imageName: '$(ImageName)'
+        useDefaultContext: false
+        buildContext: 'CustomerApi'
+      displayName: 'Build the Docker image'
     - task: Docker@2
       displayName: Build an image
       inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/app/Dockerfile'
-        tags: |
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: 'dockerhub-halin'
+        command: 'Push an image'
+        imageName: '$(ImageName)'
+        tags: | 
           $(tag)
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    
